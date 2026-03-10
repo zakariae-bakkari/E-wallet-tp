@@ -54,12 +54,12 @@ const database = {
     },
     {
       id: "2",
-      name: "Zakariae",
-      email: "Zakariae@gmail.com",
+      name: "zakariae",
+      email: "zakariae@gmail.com",
       password: "1234",
       wallet: {
         balance: 340000,
-        currency: "dollar",
+        currency: "$",
         cards: [
           {
             numcards: "124847",

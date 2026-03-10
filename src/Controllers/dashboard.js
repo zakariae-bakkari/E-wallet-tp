@@ -1,3 +1,5 @@
+import logout from "./logout.js";
+
 // recuperer l'user connecté à partir du sessionStorage
 const user = JSON.parse(sessionStorage.getItem("user"));
 if (user) {
@@ -26,6 +28,11 @@ if (user) {
       .reduce((total, t) => total + t.amount, 0) +
     " " +
     user.wallet.currency;
+
+
+
+   //  logout
+   document.querySelector("#logout").addEventListener('click',logout);
 } else {
   // rediriger vers login
   document.location = "Login.html";
