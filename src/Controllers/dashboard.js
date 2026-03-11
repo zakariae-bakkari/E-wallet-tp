@@ -8,9 +8,11 @@ if (user) {
 
   // balance
   document.querySelector("#availableBalance").textContent =
-    user.wallet.balance + " " + user.wallet.currency;
+    user.wallet.cards.reduce((total, ba) => total + ba.balance,0) +
+    " " +
+    user.wallet.currency;
 
-    // nombre de cartes actives
+  // nombre de cartes actives
   document.querySelector("#activeCards").textContent = user.wallet.cards.length;
 
   // dépenses
@@ -21,7 +23,7 @@ if (user) {
     " " +
     user.wallet.currency;
 
-    // revenus
+  // revenus
   document.querySelector("#monthlyIncome").textContent =
     user.wallet.transactions
       .filter((t) => t.type === "credit")
@@ -29,10 +31,8 @@ if (user) {
     " " +
     user.wallet.currency;
 
-
-
-   //  logout
-   document.querySelector("#logout").addEventListener('click',logout);
+  //  logout
+  document.querySelector("#logout").addEventListener("click", logout);
 } else {
   // rediriger vers login
   document.location = "Login.html";
