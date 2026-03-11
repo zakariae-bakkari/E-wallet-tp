@@ -13,7 +13,7 @@ if (user) {
     user.wallet.currency;
 
   // nombre de cartes actives
-  document.querySelector("#activeCards").textContent = user.wallet.cards.length;
+  document.querySelector("#activeCards").textContent = user.wallet.cards.filter((c) => c.expiry > new Date().toISOString().slice(0, 10)).length;
 
   // dépenses
   document.querySelector("#monthlyExpenses").textContent =

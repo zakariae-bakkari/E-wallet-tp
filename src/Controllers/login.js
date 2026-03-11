@@ -9,6 +9,8 @@ function handleSubmit(e) {
   e.preventDefault();
   const mailValue = mail.value;
   const passwordValue = password.value;
+  
+  submit.textContent = "checking ...";
   // simuler la connexion à la base de données
   setTimeout(() => {
     const user = findUserByMail(mailValue, passwordValue);
