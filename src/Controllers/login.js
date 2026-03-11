@@ -21,5 +21,5 @@ function handleSubmit(e) {
     } else {
       alert("Invalid email or password");
     }
-  });
+  }, 1000);
 }
