@@ -6,7 +6,6 @@ const database = {
       email: "Ali@example.com",
       password: "1232",
       wallet: {
-        balance: 12457,
         currency: "MAD",
         cards: [
           {
@@ -58,18 +57,17 @@ const database = {
       email: "zakariae@gmail.com",
       password: "1234",
       wallet: {
-        balance: 340000,
-        currency: "$",
+        currency: "MAD",
         cards: [
           {
-            numcards: "124847",
+            numcards: "124849",
             type: "visa",
             balance: 14712,
             expiry: "14-08-27",
             vcc: "147",
           },
           {
-            numcards: "124478",
+            numcards: "124950",
             type: "mastercard",
             balance: 1470,
             expiry: "14-08-28",
@@ -83,14 +81,14 @@ const database = {
             amount: 140,
             date: "14-08-25",
             from: "Meriem",
-            to: "124847",
+            to: "124849",
           },
           {
             id: "2",
             type: "debit",
             amount: 200,
             date: "13-08-25",
-            from: "124847",
+            from: "124849",
             to: "Youssef Market Place",
           },
         ],
@@ -105,4 +103,10 @@ const findUserByMail = (mail, password) => {
   );
 };
 
-export default findUserByMail;
+const ExistBeneficaire = (numbercard) => {
+  return database.users.find((u) =>
+    u.wallet.cards.find((c) => c.numcards == numbercard)
+  );
+};
+
+export { findUserByMail, ExistBeneficaire };
