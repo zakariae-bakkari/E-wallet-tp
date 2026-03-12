@@ -1,3 +1,4 @@
+import { database } from "../Models/database.js";
 import logout from "./logout.js";
 
 // recuperer l'user connecté à partir du sessionStorage
@@ -47,15 +48,41 @@ if (user) {
     .querySelector("#transfers")
     .addEventListener("click", handletransferView);
 
+  // quick transfer
+  document
+    .querySelector("#quickTransfer")
+    .addEventListener("click", handletransferView);
+
   function handletransferView() {
-    console.log("transfer clicked");
-    if (transfersection.classList.contains("hidden")) {
-      transfersection.classList.remove("hidden");
-    } else {
-      transfersection.classList.add("hidden");
-    }
+    transfersection.classList.toggle("hidden");
   }
 
+  // close transfer button
+  document.querySelector("#closeTransferBtn").addEventListener("click", () => {
+    transfersection.classList.add("hidden");
+  });
+
+  // lister les bénéficiaires
+  const beneficiarySelect = document.querySelector("#beneficiary");
+  database.users.forEach((u) => {
+    if (u.name !== user.name) {
+      u.wallet.cards.forEach((c) => {
+        const option = document.createElement("option");
+        option.value = c.numcards;
+        option.textContent = `${u.name} - ${c.type} - ${c.numcards}`;
+        beneficiarySelect.appendChild(option);
+      });
+    }
+  });
+
+  // lister les cards
+  const sourceCard = document.querySelector("#sourceCard");
+  user.wallet.cards.forEach((c) => {
+    const option = document.createElement("option");
+    option.value = c.numcards;
+    option.textContent = `${c.type} - ${c.numcards}`;
+    sourceCard.appendChild(option);
+  });
 } else {
   // rediriger vers login
   document.location = "Login.html";

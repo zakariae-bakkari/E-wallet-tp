@@ -109,4 +109,4 @@ const ExistBeneficaire = (numbercard) => {
   );
 };
 
-export { findUserByMail, ExistBeneficaire };
+export { findUserByMail, ExistBeneficaire, database };
