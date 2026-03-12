@@ -8,16 +8,18 @@ if (user) {
 
   // balance
   document.querySelector("#availableBalance").textContent =
-    user.wallet.cards.reduce((total, ba) => total + ba.balance,0) +
+    user.wallet.cards.reduce((total, ba) => total + ba.balance, 0) +
     " " +
     user.wallet.currency;
 
   // nombre de cartes actives
-  document.querySelector("#activeCards").textContent = user.wallet.cards.filter((c) => {
-    const [day, month, year] = c.expiry.split("-");
-    const expiryDate = new Date(`${year}-${month}-${day}`);
-    return expiryDate > new Date();
-  }).length;
+  document.querySelector("#activeCards").textContent = user.wallet.cards.filter(
+    (c) => {
+      const [day, month, year] = c.expiry.split("-");
+      const expiryDate = new Date(`${year}-${month}-${day}`);
+      return expiryDate > new Date();
+    }
+  ).length;
 
   // dépenses
   document.querySelector("#monthlyExpenses").textContent =
@@ -37,6 +39,23 @@ if (user) {
 
   //  logout
   document.querySelector("#logout").addEventListener("click", logout);
+
+  // transfer
+  const transfersection = document.querySelector("#transfer-section");
+  console.log(transfersection);
+  document
+    .querySelector("#transfers")
+    .addEventListener("click", handletransferView);
+
+  function handletransferView() {
+    console.log("transfer clicked");
+    if (!transfersection.classList.contains("hidden")) {
+      transfersection.classList.remove("hidden");
+    } else {
+      transfersection.classList.add("hidden");
+    }
+  }
+
 } else {
   // rediriger vers login
   document.location = "Login.html";
