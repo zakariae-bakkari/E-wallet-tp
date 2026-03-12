@@ -49,7 +49,7 @@ if (user) {
 
   function handletransferView() {
     console.log("transfer clicked");
-    if (!transfersection.classList.contains("hidden")) {
+    if (transfersection.classList.contains("hidden")) {
       transfersection.classList.remove("hidden");
     } else {
       transfersection.classList.add("hidden");
