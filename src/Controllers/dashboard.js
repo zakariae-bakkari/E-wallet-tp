@@ -23,8 +23,8 @@ function renderSummary(user) {
     user.wallet.currency
   );
 
-  document.querySelector("#activeCards").textContent = user.wallet.cards.filter((c) =>
-    isCardActive(c.expiry)
+  document.querySelector("#activeCards").textContent = user.wallet.cards.filter(
+    (c) => isCardActive(c.expiry)
   ).length;
 
   document.querySelector("#monthlyExpenses").textContent = formatMoney(
@@ -89,7 +89,9 @@ function renderRecentTransactions(user) {
     item.className = "transaction-item";
     item.innerHTML = `
       <div>
-        <strong>${t.type === "debit" ? "Transfert envoyé" : "Transfert reçu"}</strong>
+        <strong>${
+          t.type === "debit" ? "Transfert envoyé" : "Transfert reçu"
+        }</strong>
         <p>${t.date}</p>
       </div>
       <div>
@@ -127,20 +129,28 @@ if (user) {
     transferSection.classList.toggle("hidden");
   }
 
-  document.querySelector("#transfers").addEventListener("click", handleTransferView);
-  document.querySelector("#quickTransfer").addEventListener("click", handleTransferView);
+  document
+    .querySelector("#transfers")
+    .addEventListener("click", handleTransferView);
+  document
+    .querySelector("#quickTransfer")
+    .addEventListener("click", handleTransferView);
 
   document.querySelector("#closeTransferBtn").addEventListener("click", () => {
     transferSection.classList.add("hidden");
   });
 
-  document.querySelector("#submitTransferBtn").addEventListener("click", function (e) {
+  const submitTransferBtn = document.querySelector("#submitTransferBtn");
+
+  submitTransferBtn.addEventListener("click", handlesubmitTransfer);
+
+  function handlesubmitTransfer(e) {
     e.preventDefault();
 
     const amount = parseFloat(document.querySelector("#amount").value);
     const sourceCardNum = document.querySelector("#sourceCard").value;
     const beneficiaryCardNum = document.querySelector("#beneficiary").value;
-
+    submitTransferBtn.textContent = "Transfert en cours...";
     transferMoney(
       amount,
       sourceCardNum,
@@ -155,7 +165,7 @@ if (user) {
         alert(message);
       }
     );
-  });
+  }
 } else {
   document.location = "login.html";
 }
