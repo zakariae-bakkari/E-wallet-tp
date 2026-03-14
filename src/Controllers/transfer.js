@@ -2,58 +2,63 @@ import { database, ExistBeneficaire } from "../Models/database.js";
 
 const user = JSON.parse(sessionStorage.getItem("user"));
 
+// Entry point: orchestrates the nested callback chain
 function transfer(
-  callback,
+  checkamountCallback,
   amount,
   cardfrom,
   cardto,
-  callback2,
-  callback3,
-  callback4
+  checksoldeCallback,
+  checkbeneficaireCallback,
+  executeTransferCallback
 ) {
   setTimeout(() => {
-    callback(amount, cardfrom, cardto, callback2, callback3, callback4);
-  }, 1000); // Simulate asynchronous operation with a delay of 1 second
+    checkamountCallback(amount, cardfrom, cardto, checksoldeCallback, checkbeneficaireCallback, executeTransferCallback);
+  }, 1000);
 }
 
-function checkamount(amount, cardfrom, cardto, callback, callback2, callback3) {
+// Step 1 — Check that amount is positive
+function checkamount(amount, cardfrom, cardto, checksoldeCallback, checkbeneficaireCallback, executeTransferCallback) {
   setTimeout(() => {
     if (amount > 0) {
-      callback(amount, cardfrom, cardto, callback2, callback3);
+      checksoldeCallback(amount, cardfrom, cardto, checkbeneficaireCallback, executeTransferCallback);
     } else {
-      console.error("amount must be positive");
+      console.error("Le montant doit être positif");
     }
   }, 1000);
 }
 
-function checksolde(amount, cardfrom, cardto, callback, callback2) {
+// Step 2 — Check that the source card has enough balance
+function checksolde(amount, cardfrom, cardto, checkbeneficaireCallback, executeTransferCallback) {
   setTimeout(() => {
     if (cardfrom.balance >= amount) {
-      callback(cardto, callback2);
+      checkbeneficaireCallback(amount, cardfrom, cardto, executeTransferCallback);
     } else {
-      console.error("solde insuffisant");
+      console.error("Solde insuffisant");
     }
   }, 1000);
 }
 
-function checkbeneficaire(cardto, callback) {
+// Step 3 — Check that the beneficiary card exists in the database
+function checkbeneficaire(amount, cardfrom, cardto, executeTransferCallback) {
   setTimeout(() => {
     if (ExistBeneficaire(cardto.numcards)) {
-      callback(cardto);
+      executeTransferCallback(amount, cardfrom, cardto);
     } else {
-      console.error("beneficaire not found");
+      console.error("Bénéficiaire introuvable");
     }
   }, 1000);
 }
 
-const executeTransfer = (cardfrom, cardto, amount) => {
+// Step 4 — Execute the transfer
+const executeTransfer = (amount, cardfrom, cardto) => {
   setTimeout(() => {
     console.log(
-      "Transferring",
+      "Transfert de",
       amount,
-      "from card",
+      "depuis la carte",
       cardfrom.numcards,
-      "to card",
+      "vers la carte",
       cardto.numcards
     );
 
@@ -61,56 +66,65 @@ const executeTransfer = (cardfrom, cardto, amount) => {
     cardfrom.balance -= amount;
     cardto.balance += amount;
 
-    // Create a new transaction object
+    // Create transaction object for the sender (debit)
     const transaction = {
-      id: Date.now().toString(), // Unique ID for the transaction
+      id: Date.now().toString(),
       type: "debit",
       amount: amount,
-      date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+      date: new Date().toISOString().split("T")[0],
       from: cardfrom.numcards,
       to: cardto.numcards,
     };
 
-    // Add the transaction to the sender's wallet
-    user.wallet.transactions.push(transaction);
-
-    // Add the transaction to the receiver's wallet
-    const beneficiary = ExistBeneficaire(cardto.numcards);
+    // Receiver's version of the same transaction (credit)
     const beneficiaryTransaction = { ...transaction, type: "credit" };
-    beneficiary.wallet.transactions.push(beneficiaryTransaction);
 
-    // Update the database
-    const userInDatabase = database.users.find((u) => u.email === user.email);
+    // FIX: find beneficiary user from the database (not from user object)
     const beneficiaryInDatabase = database.users.find((u) =>
       u.wallet.cards.some((c) => c.numcards === cardto.numcards)
     );
 
+    // Sync card balances in the database
+    const userInDatabase = database.users.find((u) => u.email === user.email);
+
     userInDatabase.wallet.cards.find(
       (c) => c.numcards === cardfrom.numcards
     ).balance = cardfrom.balance;
+
     beneficiaryInDatabase.wallet.cards.find(
       (c) => c.numcards === cardto.numcards
     ).balance = cardto.balance;
 
-    // Add transactions to the database
+    // FIX: push transactions only once per wallet (avoid double push)
     userInDatabase.wallet.transactions.push(transaction);
     beneficiaryInDatabase.wallet.transactions.push(beneficiaryTransaction);
 
-    // Update sessionStorage
-    sessionStorage.setItem("user", JSON.stringify(user));
+    // Update sessionStorage so the UI reflects new balance
+    sessionStorage.setItem("user", JSON.stringify(userInDatabase));
 
-    console.log(
-      "New balance of card",
-      cardfrom.numcards,
-      "is",
-      cardfrom.balance
-    );
-    console.log("New balance of card", cardto.numcards, "is", cardto.balance);
-    console.log("Transfer successful");
+    console.log("Nouveau solde carte", cardfrom.numcards, ":", cardfrom.balance);
+    console.log("Nouveau solde carte", cardto.numcards, ":", cardto.balance);
+    console.log("Transfert réussi ✓");
   }, 1000);
 };
 
-const transferMoney = (amount, cardfrom, cardto) => {
+// FIX: resolve card objects from card numbers before starting the chain
+const transferMoney = (amount, cardfromNum, cardtoNum) => {
+  // Find the actual card objects from their numbers
+  const cardfrom = user.wallet.cards.find((c) => c.numcards === cardfromNum);
+  const cardto = database.users
+    .flatMap((u) => u.wallet.cards)
+    .find((c) => c.numcards === cardtoNum);
+
+  if (!cardfrom) {
+    console.error("Carte source introuvable :", cardfromNum);
+    return;
+  }
+  if (!cardto) {
+    console.error("Carte bénéficiaire introuvable :", cardtoNum);
+    return;
+  }
+
   transfer(
     checkamount,
     amount,
@@ -118,9 +132,7 @@ const transferMoney = (amount, cardfrom, cardto) => {
     cardto,
     checksolde,
     checkbeneficaire,
-    (cardto) => {
-      executeTransfer(cardfrom, cardto, amount);
-    }
+    executeTransfer
   );
 };
 
