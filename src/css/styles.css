@@ -427,6 +427,14 @@ footer {
   color: #3b66f6;
   border-left: 3px solid #3b66f6;
 }
+#logout:hover {
+  background: #ffebee;
+  color: #c62828;
+  border-left: 3px solid #c62828;
+}
+#logout:hover i {
+  color: #c62828;
+}
 
 .sidebar-nav li.active i,
 .sidebar-nav a:hover i {
