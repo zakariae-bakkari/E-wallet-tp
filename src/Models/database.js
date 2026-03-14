@@ -1,4 +1,4 @@
-const database = {
+const defaultDatabase = {
   users: [
     {
       id: "1",
@@ -97,6 +97,17 @@ const database = {
   ],
 };
 
+function loadDatabase() {
+  const saved = localStorage.getItem("database");
+  return saved ? JSON.parse(saved) : structuredClone(defaultDatabase);
+}
+
+function saveDatabase(db) {
+  localStorage.setItem("database", JSON.stringify(db));
+}
+
+const database = loadDatabase();
+
 const findUserByMail = (mail, password) => {
   return database.users.find(
     (u) => u.email === mail && u.password === password
@@ -105,8 +116,8 @@ const findUserByMail = (mail, password) => {
 
 const ExistBeneficaire = (numbercard) => {
   return database.users.find((u) =>
-    u.wallet.cards.find((c) => c.numcards == numbercard)
+    u.wallet.cards.find((c) => c.numcards === numbercard)
   );
 };
 
-export { findUserByMail, ExistBeneficaire, database };
+export { findUserByMail, ExistBeneficaire, database, saveDatabase, loadDatabase };
