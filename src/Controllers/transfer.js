@@ -1,52 +1,127 @@
-import { ExistBeneficaire } from "../Models/database.js";
+import { database, ExistBeneficaire } from "../Models/database.js";
 
 const user = JSON.parse(sessionStorage.getItem("user"));
 
-const amount = 20000000;
-const numcardfrom = "124849";
-const numcardto = "124847"; // verfiier le beneficaire
-
-function transfer(callback, amount, callback2, callback3, callback4) {
-  callback(amount, callback2, callback3, callback4);
+function transfer(
+  callback,
+  amount,
+  cardfrom,
+  cardto,
+  callback2,
+  callback3,
+  callback4
+) {
+  setTimeout(() => {
+    callback(amount, cardfrom, cardto, callback2, callback3, callback4);
+  }, 1000); // Simulate asynchronous operation with a delay of 1 second
 }
 
-function checkamount(amount, callback, callback2, callback3) {
-  if (amount > 0) {
-    callback(amount, callback2, callback3);
-  } else {
-    console.error("amount must be positive");
-  }
+function checkamount(amount, cardfrom, cardto, callback, callback2, callback3) {
+  setTimeout(() => {
+    if (amount > 0) {
+      callback(amount, cardfrom, cardto, callback2, callback3);
+    } else {
+      console.error("amount must be positive");
+    }
+  }, 1000);
 }
 
-function checksolde(amount, callback, callback2) {
-  const cardfrom = user.wallet.cards.find((c) => c.numcards === numcardfrom);
-  if (cardfrom.balance >= amount) {
-    callback(numcardto, callback2);
-  } else {
-    console.error("solde insuffisant");
-  }
+function checksolde(amount, cardfrom, cardto, callback, callback2) {
+  setTimeout(() => {
+    if (cardfrom.balance >= amount) {
+      callback(cardto, callback2);
+    } else {
+      console.error("solde insuffisant");
+    }
+  }, 1000);
 }
 
-function checkbeneficaire(numcardto, callback) {
-  if (ExistBeneficaire(numcardto) && numcardto !== numcardfrom) {
-    callback(numcardto);
-  } else {
-    console.error("beneficaire not found");
-  }
+function checkbeneficaire(cardto, callback) {
+  setTimeout(() => {
+    if (ExistBeneficaire(cardto.numcards)) {
+      callback(cardto);
+    } else {
+      console.error("beneficaire not found");
+    }
+  }, 1000);
 }
 
-function executeTransfer(numcardto) { // besoin de modifier l'objet qui existe dans le database pour que les changements soient persistants + objet dans sessionStorage
-  const cardfrom = user.wallet.cards.find((c) => c.numcards === numcardfrom);
-  const cardto = ExistBeneficaire(numcardto).wallet.cards.find(
-    (c) => c.numcards === numcardto
+const executeTransfer = (cardfrom, cardto, amount) => {
+  setTimeout(() => {
+    console.log(
+      "Transferring",
+      amount,
+      "from card",
+      cardfrom.numcards,
+      "to card",
+      cardto.numcards
+    );
+
+    // Update balances
+    cardfrom.balance -= amount;
+    cardto.balance += amount;
+
+    // Create a new transaction object
+    const transaction = {
+      id: Date.now().toString(), // Unique ID for the transaction
+      type: "debit",
+      amount: amount,
+      date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+      from: cardfrom.numcards,
+      to: cardto.numcards,
+    };
+
+    // Add the transaction to the sender's wallet
+    user.wallet.transactions.push(transaction);
+
+    // Add the transaction to the receiver's wallet
+    const beneficiary = ExistBeneficaire(cardto.numcards);
+    const beneficiaryTransaction = { ...transaction, type: "credit" };
+    beneficiary.wallet.transactions.push(beneficiaryTransaction);
+
+    // Update the database
+    const userInDatabase = database.users.find((u) => u.email === user.email);
+    const beneficiaryInDatabase = database.users.find((u) =>
+      u.wallet.cards.some((c) => c.numcards === cardto.numcards)
+    );
+
+    userInDatabase.wallet.cards.find(
+      (c) => c.numcards === cardfrom.numcards
+    ).balance = cardfrom.balance;
+    beneficiaryInDatabase.wallet.cards.find(
+      (c) => c.numcards === cardto.numcards
+    ).balance = cardto.balance;
+
+    // Add transactions to the database
+    userInDatabase.wallet.transactions.push(transaction);
+    beneficiaryInDatabase.wallet.transactions.push(beneficiaryTransaction);
+
+    // Update sessionStorage
+    sessionStorage.setItem("user", JSON.stringify(user));
+
+    console.log(
+      "New balance of card",
+      cardfrom.numcards,
+      "is",
+      cardfrom.balance
+    );
+    console.log("New balance of card", cardto.numcards, "is", cardto.balance);
+    console.log("Transfer successful");
+  }, 1000);
+};
+
+const transferMoney = (amount, cardfrom, cardto) => {
+  transfer(
+    checkamount,
+    amount,
+    cardfrom,
+    cardto,
+    checksolde,
+    checkbeneficaire,
+    (cardto) => {
+      executeTransfer(cardfrom, cardto, amount);
+    }
   );
-  console.log("transferring", amount, "from", cardfrom.numcards, "to", cardto.numcards);
-  cardfrom.balance -= amount;
-  cardto.balance += amount;
-  console.log("new balance of card", cardfrom.numcards, "is", cardfrom.balance);
-  console.log("new balance of card", cardto.numcards, "is", cardto.balance);
-  console.log("transfer successful");
-}
+};
 
-
-transfer(checkamount, amount, checksolde, checkbeneficaire, executeTransfer);
+export { transferMoney };

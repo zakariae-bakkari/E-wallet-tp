@@ -1,6 +1,6 @@
 import { database } from "../Models/database.js";
 import logout from "./logout.js";
-
+import { transferMoney } from "./transfer.js";
 // recuperer l'user connecté à partir du sessionStorage
 const user = JSON.parse(sessionStorage.getItem("user"));
 if (user) {
@@ -80,9 +80,24 @@ if (user) {
   user.wallet.cards.forEach((c) => {
     const option = document.createElement("option");
     option.value = c.numcards;
-    option.textContent = `${c.type} - ${c.numcards}`;
+    option.textContent = `${c.type} - ${c.numcards} - ${c.balance} ${user.wallet.currency}`;
     sourceCard.appendChild(option);
   });
+
+  // submit transfer form
+  document
+    .querySelector("#submitTransferBtn")
+    .addEventListener("click", handleSubmitTransfer);
+
+  function handleSubmitTransfer() {
+    const amount = parseFloat(document.querySelector("#amount").value);
+    const sourceCardNum = document.querySelector("#sourceCard").value;
+    const beneficiaryCardNum = document.querySelector("#beneficiary").value;
+    transferMoney(amount, sourceCardNum, beneficiaryCardNum);
+    transfersection.classList.add("hidden");
+    console.log("Transfer submitted");
+    console.log(database);
+  }
 } else {
   // rediriger vers login
   document.location = "Login.html";

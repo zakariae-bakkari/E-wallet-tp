@@ -2,8 +2,8 @@ const database = {
   users: [
     {
       id: "1",
-      name: "meriem",
-      email: "meriem@gmail.com",
+      name: "ali",
+      email: "ali@gmail.com",
       password: "2004",
       wallet: {
         currency: "MAD",
@@ -62,7 +62,7 @@ const database = {
           {
             numcards: "124849",
             type: "visa",
-            balance: 20000000,
+            balance: 2000,
             expiry: "14-08-2027",
             vcc: "147",
           },
@@ -80,7 +80,7 @@ const database = {
             type: "credit",
             amount: 1400,
             date: "14-08-2025",
-            from: "Meriem",
+            from: "ali",
             to: "124849",
           },
           {
