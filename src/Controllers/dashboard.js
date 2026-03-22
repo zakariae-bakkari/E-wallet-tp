@@ -184,39 +184,23 @@ function addtransactions(exp, destinataire, amount) {
 
 export function transferer(exp, numcompte, amount) {
   console.log("\n DÉBUT DU TRANSFERT ");
-
-  // Étape 1: Vérifier le destinataire
-  checkUser(numcompte, function afterCheckUser(destinataire) {
-    console.log("Étape 1: Destinataire trouvé -", destinataire.name);
-
-    // Étape 2: Vérifier le solde
-    checkSolde(exp, amount, function afterCheckSolde(soldemessage) {
-      console.log(" Étape 2:", soldemessage);
-
-      if (soldemessage.includes("Solde suffisant")) {
-        // Étape 3: Mettre à jour les soldes
-        updateSolde(
-          exp,
-          destinataire,
-          amount,
-          function afterUpdateSolde(updatemessage) {
-            console.log(" Étape 3:", updatemessage);
-
-            // Étape 4: Enregistrer la transaction
-            addtransactions(
-              exp,
-              destinataire,
-              amount,
-              function afterAddTransactions(transactionMessage) {
-                console.log(" Étape 4:", transactionMessage);
-                console.log(`Transfert de ${amount} réussi!`);
-              }
-            );
-          }
-        );
+  checkUser(numcompte)
+    .then((destinataire) => {
+      console.log("Étape 1: Destinataire trouvé -", destinataire.name);
+      return checkSolde(exp, amount);
+    })
+    .then((message) => {
+      console.log(message);
+      if (message.includes("Solde suffisant")) {
+        return updateSolde(exp, destinataire, amount);
       }
-    });
-  });
+    })
+    .then((message) => {
+      console.log(message);
+      return addtransactions(exp, destinataire, amount);
+    })
+    .then((message) => console.log(message));
+  
 }
 
 function handleTransfer(e) {
