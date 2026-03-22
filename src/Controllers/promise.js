@@ -46,3 +46,11 @@ processPayment(amount)
   .catch((error) => {
     console.error(error);
   });
+
+
+  navigator.geolocation.getCurrentPosition(
+    position => console.log(position),
+    error => console.error(error)
+  )
+
+  navigator.language.then(language => console.log(language))
