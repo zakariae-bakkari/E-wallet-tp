@@ -128,12 +128,12 @@ function checkUser(numcompte) {
   });
 }
 
-function checkSolde(exp, amount) {
+function checkSolde(exp, amount, destinataire) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       const solde = exp.wallet.balance;
       if (solde >= amount) {
-        resolve("Solde suffisant");
+        resolve({ msg: "Solde suffisant", destinataire: destinataire });
       } else {
         reject("Solde insuffisant");
       }
@@ -146,7 +146,7 @@ function updateSolde(exp, destinataire, amount) {
     setTimeout(() => {
       exp.wallet.balance -= amount;
       destinataire.wallet.balance += amount;
-      resolve("Solde mis à jour");
+      resolve({ msg: "Solde mis à jour", destinataire });
     }, 300);
   });
 }
@@ -187,20 +187,19 @@ export function transferer(exp, numcompte, amount) {
   checkUser(numcompte)
     .then((destinataire) => {
       console.log("Étape 1: Destinataire trouvé -", destinataire.name);
-      return checkSolde(exp, amount);
+      return checkSolde(exp, amount, destinataire);
     })
     .then((message) => {
       console.log(message);
-      if (message.includes("Solde suffisant")) {
-        return updateSolde(exp, destinataire, amount);
+      if (message.msg.includes("Solde suffisant")) {
+        return updateSolde(exp, message.destinataire, amount);
       }
     })
     .then((message) => {
       console.log(message);
-      return addtransactions(exp, destinataire, amount);
+      return addtransactions(exp, message.destinataire, amount);
     })
     .then((message) => console.log(message));
-  
 }
 
 function handleTransfer(e) {
