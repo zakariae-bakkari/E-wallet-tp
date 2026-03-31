@@ -30,13 +30,13 @@ const closeRechargerBtn = document.getElementById("closeRechargerBtn");
 const cancelRechargerBtn = document.getElementById("cancelRechargerBtn");
 const sourceCardRecharger = document.getElementById("sourceCardRecharger");
 // Demander
-const DemanderBtn = document.getElementById("quickRequest");
-const submitDemanderBtn = document.getElementById("submitDemanderBtn");
-const DemanderSection = document.getElementById("DemanderPopup");
-const closeDemanderBtn = document.getElementById("closeDemanderBtn");
-const cancelDemanderBtn = document.getElementById("cancelDemanderBtn");
-const descriptionDemander = document.getElementById("descriptionDemander");
-const accountDemander = document.getElementById("accountDemander");
+// const DemanderBtn = document.getElementById("quickRequest");
+// const submitDemanderBtn = document.getElementById("submitDemanderBtn");
+// const DemanderSection = document.getElementById("DemanderPopup");
+// const closeDemanderBtn = document.getElementById("closeDemanderBtn");
+// const cancelDemanderBtn = document.getElementById("cancelDemanderBtn");
+// const descriptionDemander = document.getElementById("descriptionDemander");
+// const accountDemander = document.getElementById("accountDemander");
 // Guard
 if (!user) {
   alert("User not authenticated");
@@ -55,10 +55,10 @@ closeRechargerBtn.addEventListener("click", closeRecharger);
 cancelRechargerBtn.addEventListener("click", closeRecharger);
 submitRechargerBtn.addEventListener("click", handleRecharger);
 //! Demander
-DemanderBtn.addEventListener("click", handleDemandersection);
-closeDemanderBtn.addEventListener("click", closeDemander);
-cancelDemanderBtn.addEventListener("click", closeDemander);
-submitDemanderBtn.addEventListener("click", handleDemander);
+// DemanderBtn.addEventListener("click", handleDemandersection);
+// closeDemanderBtn.addEventListener("click", closeDemander);
+// cancelDemanderBtn.addEventListener("click", closeDemander);
+// submitDemanderBtn.addEventListener("click", handleDemander);
 
 // Retrieve dashboard data
 const getDashboardData = () => {
@@ -211,28 +211,20 @@ function addtransactions(exp, destinataire, amount) {
   });
 }
 
-export function transferer(exp, numcompte, amount) {
-  let dest;
-  console.log("\n DÉBUT DU TRANSFERT ");
-  checkUser(numcompte) //p0
-    .then((destinataire) => {
-      //p1
-      dest = destinataire;
-      console.log("Étape 1: Destinataire trouvé -", destinataire.name);
-      return checkSolde(exp, amount); //p2
-    })
-    .then((message) => {
-      console.log(message);
-      if (message.includes("Solde suffisant")) {
-        return updateSolde(exp, dest, amount);
-      }
-    })
-    .then((message) => {
-      console.log(message);
-      return addtransactions(exp, dest, amount);
-    })
-    .then((message) => console.log(message))
-    .catch((error) => console.error("Erreur lors du transfert:", error));
+export async function transferer(exp, numcompte, amount) {
+  try {
+    console.log("\n DÉBUT DU TRANSFERT ");
+    const destinataire = await checkUser(numcompte);
+    console.log(destinataire);
+    const checksolde = await checkSolde(exp, amount);
+    console.log(checksolde);
+    const updatesoldemessage = await updateSolde(exp, destinataire, amount);
+    console.log(updatesoldemessage);
+    const addtransaction = addTransaction(exp, destinataire, amount);
+    console.log(addtransaction);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 function handleTransfer(e) {
@@ -269,20 +261,17 @@ function handleRecharger(e) {
   recharger(user, amount, sourceCard);
 }
 
-function recharger(user, amount, sourceCard) {
-  hasPaymentMethod(user.id) // cree le promise p0
-    .then((message) => {
-      // cree le promise p1
-      console.log(message);
-      return checkPaymentMethod(sourceCard, user.id); // cree le promise p2
-    })
-    .then((message) => {
-      // cree le promise p3
-      console.log(message);
-      return addTransaction(user, amount, sourceCard); // cree le promise p4
-    })
-    .then((message) => console.log(message)) // cree le promise p5
-    .catch((error) => console.error("Erreur lors du rechargement:", error));
+async function recharger(user, amount, sourceCard) {
+  try {
+    const hasPM = await hasPaymentMethod(user.id);
+    console.log(hasPM);
+    const checkPM = await checkPaymentMethod(sourceCard, user.id);
+    console.log(checkPM);
+    const trans = await addTransaction(user, amount, sourceCard);
+    console.log(trans);
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 function hasPaymentMethod(userID) {
@@ -319,53 +308,52 @@ function simulerServeurresponse() {
 function addTransaction(user, amount, numCard) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-    let type = simulerServeurresponse();
-    if (type === "recharge") {
-      user.wallet.balance += amount;
-      user.wallet.cards.find((u) => u.numcards === numCard).balance -= amount;
-      user.wallet.transactions.push({
-        id: user.wallet.transactions.length + 1,
-        type: type,
-        amount: amount,
-        date: new Date().toLocaleDateString(),
-        from: numCard,
-        to: "mywallet",
-      });
-      renderDashboard();
-      resolve("la transaction a ete ajouter avec succes");
-    }
-    // echec
-    else {
-      user.wallet.transactions.push({
-        id: user.wallet.transactions.length + 1,
-        type: type,
-        amount: amount,
-        date: new Date().toLocaleDateString(),
-        from: numCard,
-        to: "mywallet",
-      });
-      renderDashboard();
+      let type = simulerServeurresponse();
+      if (type === "recharge") {
+        user.wallet.balance += amount;
+        user.wallet.cards.find((u) => u.numcards === numCard).balance -= amount;
+        user.wallet.transactions.push({
+          id: user.wallet.transactions.length + 1,
+          type: type,
+          amount: amount,
+          date: new Date().toLocaleDateString(),
+          from: numCard,
+          to: "mywallet",
+        });
+        renderDashboard();
+        resolve("la transaction a ete ajouter avec succes");
+      }
+      // echec
+      else {
+        user.wallet.transactions.push({
+          id: user.wallet.transactions.length + 1,
+          type: type,
+          amount: amount,
+          date: new Date().toLocaleDateString(),
+          from: numCard,
+          to: "mywallet",
+        });
+        renderDashboard();
 
-      reject("la transaction a echoue");
-    }
+        reject("la transaction a echoue");
+      }
     }, 1000);
   });
 }
 
-
 // Demander popup
-function closeDemander() {
-  DemanderSection.classList.remove("active");
-  document.body.classList.remove("popup-open");
-}
+// function closeDemander() {
+//   DemanderSection.classList.remove("active");
+//   document.body.classList.remove("popup-open");
+// }
 
-function handleDemandersection() {
-  DemanderSection.classList.add("active");
-  document.body.classList.add("popup-open");
-}
+// function handleDemandersection() {
+//   DemanderSection.classList.add("active");
+//   document.body.classList.add("popup-open");
+// }
 
-function handleDemander(e) {
-  e.preventDefault();
-  const description = descriptionDemander.value;
-  demander(user, description);
-}
+// function handleDemander(e) {
+//   e.preventDefault();
+//   const description = descriptionDemander.value;
+//   demander(user, description);
+// }
