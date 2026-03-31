@@ -220,7 +220,7 @@ export async function transferer(exp, numcompte, amount) {
     console.log(checksolde);
     const updatesoldemessage = await updateSolde(exp, destinataire, amount);
     console.log(updatesoldemessage);
-    const addtransaction = addTransaction(exp, destinataire, amount);
+    const addtransaction = addtransactions(exp, destinataire, amount);
     console.log(addtransaction);
   } catch (error) {
     console.log(error);
